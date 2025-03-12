@@ -13,14 +13,17 @@ exports.createBudget = async (req, res) => {
 };
 
 exports.getBudgets = async (req, res) => {
+  const { userId } = req.params;
   try {
-    const budgets = await Budget.find({ userId: req.userId });
+    const budgets = await Budget.find({ userId });
     res.status(200).json(budgets);
   } catch (err) {
     console.error('Get Budgets Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+
 
 exports.updateBudget = async (req, res) => {
   const { budgetName, price } = req.body;
@@ -44,19 +47,12 @@ exports.updateBudget = async (req, res) => {
 
 exports.deleteBudget = async (req, res) => {
   try {
-    console.log('Deleting budget with ID:', req.params.id);
-    console.log('User ID from token:', req.userId);
+    
 
     const budget = await Budget.findById(req.params.id);
     if (!budget) {
       console.log('Budget not found');
       return res.status(404).json({ message: 'Budget not found' });
-    }
-    console.log('Budget found:', budget);
-
-    if (budget.userId.toString() !== req.userId) {
-      console.log('User not authorized');
-      return res.status(401).json({ message: 'Not authorized' });
     }
 
     await Budget.findByIdAndDelete(req.params.id);
