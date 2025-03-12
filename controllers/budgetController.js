@@ -1,9 +1,9 @@
 const Budget = require('../models/budgetModel');
 
 exports.createBudget = async (req, res) => {
-  const { budgetName, price } = req.body;
+  const { budgetName, price,userId } = req.body;
   try {
-    const budget = new Budget({ userId: req.userId, budgetName, price });
+    const budget = new Budget({ userId: userId, budgetName, price });
     await budget.save();
     res.status(201).json(budget);
   } catch (err) {
