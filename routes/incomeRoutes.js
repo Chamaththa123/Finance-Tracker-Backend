@@ -6,24 +6,16 @@ const {
   getIncomes,
   updateIncome,
   deleteIncome,
+  getIncomeById,
+  searchIncomes,
 } = require('../controllers/incomeController');
 
-const auth = (req, res, next) => {
-  const token = req.header('x-auth-token');
-  if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.userId;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: 'Token is not valid' });
-  }
-};
-
-router.post('/', auth, createIncome);
-router.get('/', auth, getIncomes);
-router.put('/:id', auth, updateIncome);
-router.delete('/:id', auth, deleteIncome);
+router.post('/', createIncome);
+router.get('/user/:userId', getIncomes);
+router.get('/:id',getIncomeById);
+router.put('/:id', updateIncome);
+router.delete('/:id', deleteIncome);
+router.get('/search', searchIncomes);
 
 module.exports = router;
