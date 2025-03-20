@@ -6,24 +6,16 @@ const {
   getExpenses,
   updateExpense,
   deleteExpense,
+  getExpenseById,
+  searchExpenses,
 } = require('../controllers/expenseController');
 
-const auth = (req, res, next) => {
-  const token = req.header('x-auth-token');
-  if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.userId;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: 'Token is not valid' });
-  }
-};
-
-router.post('/', auth, createExpense);
-router.get('/', auth, getExpenses);
-router.put('/:id', auth, updateExpense);
-router.delete('/:id', auth, deleteExpense);
+router.post('/', createExpense);
+router.get('/user/:userId', getExpenses);
+router.get('/:id',getExpenseById);
+router.put('/:id', updateExpense);
+router.delete('/:id', deleteExpense);
+router.get('/search', searchExpenses);
 
 module.exports = router;
