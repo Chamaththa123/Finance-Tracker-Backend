@@ -1,4 +1,5 @@
 const Budget = require("../models/budgetModel");
+const Expense = require('../models/expenseModel');
 
 exports.createBudget = async (req, res) => {
   const { budgetName, price, userId } = req.body;
@@ -14,9 +15,42 @@ exports.createBudget = async (req, res) => {
 
 exports.getBudgets = async (req, res) => {
   const { userId } = req.params;
+
   try {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
+
     const budgets = await Budget.find({ userId });
-    res.status(200).json(budgets);
+
+
+    const budgetsWithUsedAmount = await Promise.all(
+      budgets.map(async (budget) => {
+        const totalUsed = await Expense.aggregate([
+          {
+            $match: {
+              userId: budget.userId,
+              budgetId: budget._id.toString(),
+              createdAt: {
+                $gte: new Date(currentYear, currentMonth, 1),
+                $lt: new Date(currentYear, currentMonth + 1, 1),
+              },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalAmount: { $sum: "$amount" },
+            },
+          },
+        ]);
+
+        return {
+          ...budget.toObject(),
+          usedAmount: totalUsed.length > 0 ? totalUsed[0].totalAmount : 0,
+        };
+      })
+    );
+    res.status(200).json(budgetsWithUsedAmount);
   } catch (err) {
     console.error("Get Budgets Error:", err);
     res.status(500).json({ message: "Server error", error: err.message });

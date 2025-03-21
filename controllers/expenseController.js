@@ -1,9 +1,16 @@
 const Expense = require("../models/expenseModel");
+const Budget = require("../models/budgetModel");
 
 exports.createExpense = async (req, res) => {
-  const { title,description, amount, userId } = req.body;
+  const { title, description, amount, userId, budgetId } = req.body;
   try {
-    const expense = new Expense({ userId: userId, title, description, amount });
+    const expense = new Expense({
+      userId: userId,
+      title,
+      description,
+      amount,
+      budgetId,
+    });
     await expense.save();
     res.status(201).json(expense);
   } catch (err) {
@@ -16,6 +23,20 @@ exports.getExpenses = async (req, res) => {
   const { userId } = req.params;
   try {
     const expenses = await Expense.find({ userId });
+
+    for (let expense of expenses) {
+      if (expense.budgetId === "0") {
+        expense.budgetName = "Other";
+      } else {
+        const budget = await Budget.findById(expense.budgetId);
+        if (budget) {
+          expense.budgetName = budget.budgetName;
+        } else {
+          expense.budgetName = null;
+        }
+      }
+    }
+
     res.status(200).json(expenses);
   } catch (err) {
     console.error("Get Expenses Error:", err);
@@ -35,13 +56,13 @@ exports.getExpenseById = async (req, res) => {
 };
 
 exports.updateExpense = async (req, res) => {
-  const { title, description, amount } = req.body;
+  const { title, description, amount, budgetId } = req.body;
   try {
     const expense = await Expense.findById(req.params.id);
     if (!expense) return res.status(404).json({ message: "Expense not found" });
     const updatedExpense = await Expense.findByIdAndUpdate(
       req.params.id,
-      { title, description, amount },
+      { title, description, amount, budgetId },
       { new: true }
     );
     res.status(200).json(updatedExpense);
