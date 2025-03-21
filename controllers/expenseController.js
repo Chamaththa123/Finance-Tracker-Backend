@@ -1,9 +1,21 @@
 const Expense = require("../models/expenseModel");
 const Budget = require("../models/budgetModel");
+const Wallet = require("../models/WalletModel");
 
 exports.createExpense = async (req, res) => {
   const { title, description, amount, userId, budgetId } = req.body;
   try {
+    let wallet = await Wallet.findOne({ userId });
+
+    if (!wallet) {
+      wallet = new Wallet({ userId, totalSaving: "0" });
+      await wallet.save();
+    }
+
+    const newTotalSaving = parseFloat(wallet.totalSaving) - parseFloat(amount);
+    wallet.totalSaving = newTotalSaving.toString();
+    await wallet.save();
+
     const expense = new Expense({
       userId: userId,
       title,
@@ -59,6 +71,18 @@ exports.updateExpense = async (req, res) => {
   const { title, description, amount, budgetId } = req.body;
   try {
     const expense = await Expense.findById(req.params.id);
+    const userId = expense.userId;
+    let wallet = await Wallet.findOne({ userId });
+    if (!wallet) {
+      wallet = new Wallet({ userId, totalSaving: "0" });
+      await wallet.save();
+    }
+
+    const newAmount = parseFloat(expense.amount) - amount;
+    const newTotalSaving =
+      parseFloat(wallet.totalSaving) + parseFloat(newAmount);
+    wallet.totalSaving = newTotalSaving.toString();
+    await wallet.save();
     if (!expense) return res.status(404).json({ message: "Expense not found" });
     const updatedExpense = await Expense.findByIdAndUpdate(
       req.params.id,
@@ -79,6 +103,18 @@ exports.deleteExpense = async (req, res) => {
       console.log("Expense not found");
       return res.status(404).json({ message: "Expense not found" });
     }
+
+    const userId = expense.userId;
+        let wallet = await Wallet.findOne({ userId });
+    
+        if (!wallet) {
+          wallet = new Wallet({ userId, totalSaving: "0" });
+          await wallet.save();
+        }
+    
+        const newTotalSaving = parseFloat(wallet.totalSaving) + parseFloat(expense.amount);
+        wallet.totalSaving = newTotalSaving.toString();
+        await wallet.save();
 
     await Expense.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Expense removed" });

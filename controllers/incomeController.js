@@ -1,10 +1,23 @@
 const Income = require("../models/incomeModel");
+const Wallet = require("../models/WalletModel");
 
 exports.createIncome = async (req, res) => {
-  const { title,description, amount, userId } = req.body;
+  const { title, description, amount, userId } = req.body;
   try {
+    let wallet = await Wallet.findOne({ userId });
+
+    if (!wallet) {
+      wallet = new Wallet({ userId, totalSaving: "0" });
+      await wallet.save();
+    }
+
+    const newTotalSaving = parseFloat(wallet.totalSaving) + parseFloat(amount);
+    wallet.totalSaving = newTotalSaving.toString();
+    await wallet.save();
+
     const income = new Income({ userId: userId, title, description, amount });
     await income.save();
+
     res.status(201).json(income);
   } catch (err) {
     console.error("Create Income Error:", err);
@@ -39,6 +52,19 @@ exports.updateIncome = async (req, res) => {
   try {
     const income = await Income.findById(req.params.id);
     if (!income) return res.status(404).json({ message: "Income not found" });
+    const userId = income.userId;
+    let wallet = await Wallet.findOne({ userId });
+
+    if (!wallet) {
+      wallet = new Wallet({ userId, totalSaving: "0" });
+      await wallet.save();
+    }
+    const newAmount = parseFloat(income.amount) - amount;
+    const newTotalSaving =
+      parseFloat(wallet.totalSaving) - parseFloat(newAmount);
+    wallet.totalSaving = newTotalSaving.toString();
+    await wallet.save();
+
     const updatedIncome = await Income.findByIdAndUpdate(
       req.params.id,
       { title, description, amount },
@@ -58,6 +84,18 @@ exports.deleteIncome = async (req, res) => {
       console.log("Income not found");
       return res.status(404).json({ message: "Income not found" });
     }
+
+    const userId = income.userId;
+    let wallet = await Wallet.findOne({ userId });
+
+    if (!wallet) {
+      wallet = new Wallet({ userId, totalSaving: "0" });
+      await wallet.save();
+    }
+
+    const newTotalSaving = parseFloat(wallet.totalSaving) - parseFloat(income.amount);
+    wallet.totalSaving = newTotalSaving.toString();
+    await wallet.save();
 
     await Income.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Income removed" });
