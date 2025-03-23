@@ -7,6 +7,7 @@ const incomeRoutes = require('./routes/incomeRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const goalRoutes = require('./routes/goalRoutes');
 const walletRoutes = require('./routes/walletRoute');
+const dashBoardRoutes = require('./routes/dashBoardRoute');
 const cors = require('cors');
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use('/api/income', incomeRoutes);
 app.use('/api/expense', expenseRoutes);
 app.use('/api/goal', goalRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/dashboard', dashBoardRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

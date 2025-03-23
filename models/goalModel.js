@@ -5,6 +5,7 @@ const goalSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   amount: { type: Number, required: true },
+  status: { type: Number,default:0, required: true },
   createdAt: { type: Date, default: Date.now },
 });
 
